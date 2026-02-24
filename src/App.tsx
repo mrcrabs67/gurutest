@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchProducts, login } from './api';
 import type { Product, SortState } from './types';
 
@@ -17,6 +17,7 @@ interface FormProduct {
 
 const LOCAL_KEY = 'auth_persist';
 const SESSION_KEY = 'auth_session';
+const ITEMS_PER_PAGE = 5;
 
 function getInitialSession(): SessionState | null {
   const persistent = localStorage.getItem(LOCAL_KEY);
@@ -70,6 +71,7 @@ export default function App() {
   const [productsError, setProductsError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortState>({ key: 'price', direction: 'asc' });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [isAddOpen, setAddOpen] = useState(false);
   const [newProduct, setNewProduct] = useState<FormProduct>({
@@ -81,7 +83,7 @@ export default function App() {
   });
   const [toast, setToast] = useState<string | null>(null);
 
-  const loadProducts = () => {
+  const loadProducts = useCallback(() => {
     setLoadingProducts(true);
     setProductsError(null);
 
@@ -89,15 +91,16 @@ export default function App() {
       .then((data) => {
         setProducts(data);
         setSelectedProductIds([]);
+        setCurrentPage(1);
       })
       .catch((error: Error) => setProductsError(error.message))
       .finally(() => setLoadingProducts(false));
-  };
+  }, [search]);
 
   useEffect(() => {
     if (!session) return;
     loadProducts();
-  }, [session, search]);
+  }, [session, loadProducts]);
 
   useEffect(() => {
     if (!toast) return;
@@ -106,6 +109,17 @@ export default function App() {
   }, [toast]);
 
   const sortedProducts = useMemo(() => sortProducts(products, sort), [products, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, sortedProducts]);
 
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
@@ -137,13 +151,6 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem(LOCAL_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
-    setSession(null);
-    setSelectedProductIds([]);
-  };
-
   const toggleSort = (key: SortState['key']) => {
     setSort((prev) => ({
       key,
@@ -170,6 +177,7 @@ export default function App() {
 
     setProducts((prev) => [productToAdd, ...prev]);
     setSelectedProductIds((prev) => [productToAdd.id, ...prev]);
+    setCurrentPage(1);
     setAddOpen(false);
     setNewProduct({ title: '', price: '', brand: '', sku: '', rating: '3' });
     setToast('Товар успешно добавлен');
@@ -186,6 +194,22 @@ export default function App() {
   const toggleSelectAll = () => {
     setSelectedProductIds(allProductsSelected ? [] : products.map((product) => product.id));
   };
+
+  const visiblePageNumbers = useMemo(() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+    if (currentPage <= 3) return [1, 2, 3, 4, 5];
+    if (currentPage >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2];
+  }, [currentPage, totalPages]);
+
+  const renderSortIcon = (key: SortState['key']) => {
+    if (sort.key !== key) return <span className="sort-icon">↕</span>;
+    return <span className="sort-icon active">{sort.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  const startIndex = sortedProducts.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, sortedProducts.length);
 
   if (!session) {
     return (
@@ -240,7 +264,7 @@ export default function App() {
       <section className="top-strip">
         <h1>Товары</h1>
         <label className="search-input-wrap">
-          <span className="search-icon">⌕</span>
+          <span className="search-icon" aria-hidden="true" />
           <input
             placeholder="Найти"
             value={search}
@@ -257,7 +281,6 @@ export default function App() {
               ↻
             </button>
             <button onClick={() => setAddOpen(true)} className="primary-btn add-btn"><span className="add-icon" aria-hidden="true">+</span>Добавить</button>
-            <button className="text-btn" onClick={handleLogout}>Выйти</button>
           </div>
         </header>
 
@@ -276,17 +299,17 @@ export default function App() {
                 <th className="checkbox-cell">
                   <input type="checkbox" checked={allProductsSelected} onChange={toggleSelectAll} />
                 </th>
-                <th onClick={() => toggleSort('title')}>Наименование</th>
-                <th>Вендор</th>
-                <th>Артикул</th>
-                <th onClick={() => toggleSort('rating')}>Оценка</th>
-                <th onClick={() => toggleSort('price')}>Цена, ₽</th>
-                <th />
-                <th />
+                <th className="name-col" onClick={() => toggleSort('title')}>Наименование {renderSortIcon('title')}</th>
+                <th className="vendor-col">Вендор</th>
+                <th className="sku-col">Артикул</th>
+                <th className="rating-col" onClick={() => toggleSort('rating')}>Оценка {renderSortIcon('rating')}</th>
+                <th className="price-col" onClick={() => toggleSort('price')}>Цена, ₽ {renderSortIcon('price')}</th>
+                <th className="row-action-cell" />
+                <th className="row-action-cell" />
               </tr>
             </thead>
             <tbody>
-              {sortedProducts.map((product) => {
+              {paginatedProducts.map((product) => {
                 const selected = selectedProductIds.includes(product.id);
                 return (
                   <tr key={product.id} className={selected ? 'selected-row' : ''}>
@@ -297,7 +320,7 @@ export default function App() {
                         onChange={() => toggleProductSelection(product.id)}
                       />
                     </td>
-                    <td>
+                    <td className="name-col">
                       <div className="name-cell">
                         <span className="product-preview" />
                         <div>
@@ -306,10 +329,10 @@ export default function App() {
                         </div>
                       </div>
                     </td>
-                    <td className="vendor">{product.brand ?? '—'}</td>
-                    <td>{product.sku ?? '—'}</td>
-                    <td className={product.rating < 3.5 ? 'rating-low' : ''}>{product.rating.toFixed(1)}/5</td>
-                    <td className="price-cell">{formatPrice(product.price)}</td>
+                    <td className="vendor vendor-col">{product.brand ?? '—'}</td>
+                    <td className="sku-col">{product.sku ?? '—'}</td>
+                    <td className={`rating-col ${product.rating < 3.5 ? 'rating-low' : ''}`}>{product.rating.toFixed(1)}/5</td>
+                    <td className="price-cell price-col">{formatPrice(product.price)}</td>
                     <td className="row-action-cell"><button className="pill-btn" type="button">＋</button></td>
                     <td className="row-action-cell"><button className="menu-btn" type="button">⋯</button></td>
                   </tr>
@@ -320,15 +343,26 @@ export default function App() {
         </div>
 
         <footer className="products-footer">
-          <p>Показано 1-20 из 120</p>
+          <p>Показано {startIndex}-{endIndex} из {sortedProducts.length}</p>
           <div className="pagination">
-            <button type="button">‹</button>
-            <button type="button" className="active">1</button>
-            <button type="button">2</button>
-            <button type="button">3</button>
-            <button type="button">4</button>
-            <button type="button">5</button>
-            <button type="button">›</button>
+            <button type="button" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>‹</button>
+            {visiblePageNumbers.map((page) => (
+              <button
+                type="button"
+                key={page}
+                className={page === currentPage ? 'active' : ''}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              ›
+            </button>
           </div>
         </footer>
       </section>

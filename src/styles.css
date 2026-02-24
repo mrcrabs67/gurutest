@@ -29,12 +29,12 @@ body {
 }
 
 .auth-card {
-  width: min(450px, calc(100% - 32px));
+  width: min(452px, calc(100% - 32px));
   background: #f8f8f9;
   border: 1px solid #efeff1;
   border-radius: 32px;
   box-shadow: 0 18px 34px rgba(44, 45, 60, 0.08);
-  padding: 30px 30px 28px;
+  padding: 32px 34px 30px;
   text-align: center;
 }
 
@@ -56,7 +56,7 @@ h2 {
 }
 
 .auth-card h1 {
-  font-size: 52px;
+  font-size: 56px;
   line-height: 1.03;
   letter-spacing: -1px;
   margin-bottom: 8px;
@@ -68,8 +68,8 @@ h2 {
 }
 
 .auth-subtitle {
-  margin-bottom: 20px;
-  font-size: 33px;
+  margin-bottom: 22px;
+  font-size: 34px;
 }
 
 .form-grid,
@@ -81,7 +81,7 @@ h2 {
 label {
   display: grid;
   gap: 6px;
-  font-size: 32px;
+  font-size: 30px;
   text-align: left;
 }
 
@@ -90,7 +90,7 @@ input {
   border: 2px solid #e6e7ea;
   border-radius: 12px;
   padding: 10px 14px;
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1;
   background: #fafafa;
   color: #2a2b31;
@@ -113,7 +113,7 @@ input::placeholder {
 
 .remember-check {
   color: #a4a5ab;
-  font-size: 31px;
+  font-size: 28px;
 }
 
 button {
@@ -125,13 +125,13 @@ button {
 
 button:disabled {
   opacity: 0.6;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 .primary-btn {
   background: linear-gradient(180deg, #3853f2, #2f3fd8);
   color: #fff;
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 600;
   padding: 12px 18px;
 }
@@ -144,7 +144,7 @@ button:disabled {
   position: relative;
   color: #b5b6bb;
   text-transform: lowercase;
-  font-size: 30px;
+  font-size: 28px;
   padding: 8px 0;
 }
 
@@ -163,7 +163,7 @@ button:disabled {
 .register-hint {
   margin: 0;
   color: #7c7d84;
-  font-size: 32px;
+  font-size: 30px;
 }
 
 .register-hint a {
@@ -205,11 +205,26 @@ button:disabled {
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 18px;
   top: 50%;
+  width: 16px;
+  height: 16px;
   transform: translateY(-50%);
-  color: #9ea0a8;
-  font-size: 24px;
+  border: 2px solid #9ea0a8;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.search-icon::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  right: -6px;
+  bottom: -3px;
+  background: #9ea0a8;
+  transform: rotate(45deg);
+  border-radius: 1px;
 }
 
 .search-input-wrap input {
@@ -230,6 +245,10 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.products-head {
+  margin-bottom: 22px;
 }
 
 .products-head h2 {
@@ -284,7 +303,7 @@ button:disabled {
   background: #e8e9ee;
   border-radius: 999px;
   overflow: hidden;
-  margin: 14px 0;
+  margin: 0 0 14px;
 }
 
 .progress-bar {
@@ -297,7 +316,6 @@ button:disabled {
 
 .table-wrapper {
   overflow-x: auto;
-  margin-top: 24px;
 }
 
 table {
@@ -308,7 +326,6 @@ table {
 
 th,
 td {
-  text-align: left;
   border-bottom: 1px solid #dddddf;
   padding: 12px 10px;
   font-size: 34px;
@@ -318,19 +335,40 @@ td {
 th {
   color: #a4a6ad;
   font-weight: 600;
+  text-align: left;
 }
 
-th:nth-child(3),
-th:nth-child(4),
-th:nth-child(7),
-th:nth-child(8) { cursor: default; }
+th:nth-child(2),
+th:nth-child(5),
+th:nth-child(6) {
+  cursor: pointer;
+}
 
-th:last-child,
-td:last-child,
-th:nth-last-child(2),
-td:nth-last-child(2) {
-  width: 66px;
-  text-align: center;
+.name-col {
+  width: 40%;
+  text-align: left;
+}
+
+.vendor-col,
+.sku-col {
+  width: 16%;
+  text-align: left;
+}
+
+.rating-col,
+.price-col {
+  width: 12%;
+  text-align: right;
+}
+
+.sort-icon {
+  margin-left: 6px;
+  color: #c0c2c9;
+  font-size: 20px;
+}
+
+.sort-icon.active {
+  color: #6b6fe0;
 }
 
 .checkbox-cell {
@@ -395,6 +433,7 @@ td:nth-last-child(2) {
 .rating-low { color: #e53935; }
 
 .row-action-cell {
+  width: 66px;
   text-align: center;
   vertical-align: middle;
 }
@@ -463,6 +502,7 @@ td:nth-last-child(2) {
   display: grid;
   place-items: center;
   padding: 16px;
+  z-index: 20;
 }
 
 .card {
@@ -482,6 +522,7 @@ td:nth-last-child(2) {
   color: white;
   padding: 12px 16px;
   border-radius: 8px;
+  z-index: 30;
 }
 
 @media (max-width: 1024px) {
@@ -492,16 +533,16 @@ td:nth-last-child(2) {
   td,
   .product-title,
   .products-footer p,
-  .search-input-wrap input { font-size: 16px; }
-  .product-category,
-  .text-btn,
-  .add-btn,
+  .search-input-wrap input,
   .primary-btn,
-  .auth-subtitle,
   label,
   input,
+  .auth-subtitle,
+  .register-hint { font-size: 16px; }
+  .product-category,
   .remember-check,
   .auth-divider,
-  .register-hint { font-size: 15px; }
+  .add-btn,
+  .text-btn { font-size: 14px; }
   .auth-card h1 { font-size: 34px; }
 }
