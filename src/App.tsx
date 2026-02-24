@@ -62,6 +62,7 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(false);
 
@@ -231,7 +232,16 @@ export default function App() {
                   onChange={(event) => setUsername(event.target.value)}
                   placeholder="Введите username"
                 />
-                <span className="input-icon input-icon-clear" aria-hidden="true" />
+                {username && (
+                  <button
+                    type="button"
+                    className="icon-action"
+                    onClick={() => setUsername('')}
+                    aria-label="Очистить логин"
+                  >
+                    <span className="input-icon input-icon-clear" aria-hidden="true" />
+                  </button>
+                )}
               </span>
             </label>
             <label>
@@ -239,12 +249,21 @@ export default function App() {
               <span className="field-input">
                 <span className="input-icon input-icon-lock" aria-hidden="true" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Введите пароль"
                 />
-                <span className="input-icon input-icon-eye" aria-hidden="true" />
+                {password && (
+                  <button
+                    type="button"
+                    className="icon-action"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                  >
+                    <span className={`input-icon ${showPassword ? 'input-icon-eye-open' : 'input-icon-eye'}`} aria-hidden="true" />
+                  </button>
+                )}
               </span>
             </label>
             <label className="checkbox remember-check">

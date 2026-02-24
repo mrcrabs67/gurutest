@@ -157,8 +157,31 @@ label {
 }
 
 .input-icon-clear,
-.input-icon-eye {
+.input-icon-eye,
+.input-icon-eye-open {
   right: 14px;
+}
+
+
+.icon-action {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.icon-action .input-icon {
+  position: static;
+  transform: none;
+  opacity: 0.75;
 }
 
 .input-icon-clear::before,
@@ -176,7 +199,8 @@ label {
 .input-icon-clear::before { transform: rotate(45deg); }
 .input-icon-clear::after { transform: rotate(-45deg); }
 
-.input-icon-eye {
+.input-icon-eye,
+.input-icon-eye-open {
   border: 2px solid #c4c6cd;
   border-radius: 16px / 10px;
 }
@@ -190,6 +214,17 @@ label {
   height: 2px;
   background: #c4c6cd;
   transform: rotate(35deg);
+}
+
+.input-icon-eye-open::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  left: 4px;
+  top: 4px;
+  background: #c4c6cd;
+  border-radius: 50%;
 }
 
 input {
