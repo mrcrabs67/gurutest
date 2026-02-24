@@ -488,7 +488,7 @@ table {
 th,
 td {
   border-bottom: 1px solid #dddddf;
-  padding: 12px 10px;
+  padding: 14px 16px;
   font-size: 34px;
   vertical-align: middle;
 }
@@ -508,6 +508,7 @@ th:nth-child(6) {
 .name-col {
   width: 40%;
   text-align: left;
+  padding-left: 8px;
 }
 
 .vendor-col,
@@ -520,6 +521,7 @@ th:nth-child(6) {
 .price-col {
   width: 12%;
   text-align: right;
+  white-space: nowrap;
 }
 
 .sort-icon {
@@ -535,6 +537,8 @@ th:nth-child(6) {
 .checkbox-cell {
   width: 58px;
   text-align: center;
+  padding-left: 12px;
+  padding-right: 8px;
 }
 
 .checkbox-cell input {

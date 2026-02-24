@@ -1,18 +1,13 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchProducts, login } from './api';
 import type { Product, SortState } from './types';
+import { AddProductModal, FormProduct } from './components/AddProductModal';
+import { AuthPage } from './components/AuthPage';
+import { ProductsPage } from './components/ProductsPage';
 
 interface SessionState {
   token: string;
   username: string;
-}
-
-interface FormProduct {
-  title: string;
-  price: string;
-  brand: string;
-  sku: string;
-  rating: string;
 }
 
 const LOCAL_KEY = 'auth_persist';
@@ -38,23 +33,6 @@ function sortProducts(products: Product[], sort: SortState): Product[] {
     if (left > right) return sort.direction === 'asc' ? 1 : -1;
     return 0;
   });
-}
-
-function getCategory(title: string): string {
-  const normalized = title.toLowerCase();
-  if (normalized.includes('iphone') || normalized.includes('смартфон') || normalized.includes('phone')) return 'Телефоны';
-  if (normalized.includes('утюг') || normalized.includes('braun')) return 'Бытовая техника';
-  if (normalized.includes('play') || normalized.includes('консоль')) return 'Игровые приставки';
-  if (normalized.includes('флэш') || normalized.includes('flash')) return 'Аксессуары';
-  return 'Электроника';
-}
-
-function formatPrice(value: number): string {
-  const [rawIntPart, rawDecimalPart] = value.toFixed(2).split('.');
-  const intPart = rawIntPart ?? '0';
-  const decimalPart = rawDecimalPart ?? '00';
-  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  return `${grouped},${decimalPart}`;
 }
 
 export default function App() {
@@ -110,7 +88,6 @@ export default function App() {
   }, [toast]);
 
   const sortedProducts = useMemo(() => sortProducts(products, sort), [products, sort]);
-
   const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
 
   useEffect(() => {
@@ -204,251 +181,64 @@ export default function App() {
     return [currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2];
   }, [currentPage, totalPages]);
 
-  const renderSortIcon = (key: SortState['key']) => {
-    if (sort.key !== key) return <span className="sort-icon">↕</span>;
-    return <span className="sort-icon active">{sort.direction === 'asc' ? '↑' : '↓'}</span>;
-  };
-
   const startIndex = sortedProducts.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, sortedProducts.length);
 
   if (!session) {
     return (
-      <main className="page auth-page">
-        <section className="auth-card">
-          <div className="auth-logo"><span className="auth-logo-mark" aria-hidden="true" /></div>
-          <div className="auth-title-wrap">
-            <h1>Добро пожаловать!</h1>
-            <p className="hint auth-subtitle">Пожалуйста, авторизируйтесь</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="form-grid">
-            <label>
-              Логин
-              <span className="field-input">
-                <span className="input-icon input-icon-user" aria-hidden="true" />
-                <input
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Введите username"
-                />
-                {username && (
-                  <button
-                    type="button"
-                    className="icon-action"
-                    onClick={() => setUsername('')}
-                    aria-label="Очистить логин"
-                  >
-                    <span className="input-icon input-icon-clear" aria-hidden="true" />
-                  </button>
-                )}
-              </span>
-            </label>
-            <label>
-              Пароль
-              <span className="field-input">
-                <span className="input-icon input-icon-lock" aria-hidden="true" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Введите пароль"
-                />
-                {password && (
-                  <button
-                    type="button"
-                    className="icon-action"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                  >
-                    <span className={`input-icon ${showPassword ? 'input-icon-eye-open' : 'input-icon-eye'}`} aria-hidden="true" />
-                  </button>
-                )}
-              </span>
-            </label>
-            <label className="checkbox remember-check">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(event) => setRemember(event.target.checked)}
-              />
-              Запомнить данные
-            </label>
-            {authError && <p className="error">{authError}</p>}
-            <button disabled={loadingAuth} type="submit" className="primary-btn full-width">
-              {loadingAuth ? 'Входим...' : 'Войти'}
-            </button>
-            <div className="auth-divider">или</div>
-            <p className="register-hint">
-              Нет аккаунта? <a href="#">Создать</a>
-            </p>
-          </form>
-        </section>
-      </main>
+      <AuthPage
+        username={username}
+        password={password}
+        remember={remember}
+        showPassword={showPassword}
+        authError={authError}
+        loadingAuth={loadingAuth}
+        onUsernameChange={setUsername}
+        onPasswordChange={setPassword}
+        onRememberChange={setRemember}
+        onTogglePassword={() => setShowPassword((prev) => !prev)}
+        onSubmit={handleLogin}
+      />
     );
   }
 
   return (
-    <main className="page products-page">
-      <section className="top-strip">
-        <h1>Товары</h1>
-        <label className="search-input-wrap">
-          <span className="search-icon" aria-hidden="true" />
-          <input
-            placeholder="Найти"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-      </section>
-
-      <section className="products-card">
-        <header className="products-head">
-          <h2>Все позиции</h2>
-          <div className="actions">
-            <button className="icon-btn" onClick={loadProducts} disabled={loadingProducts} aria-label="Обновить">
-              ↻
-            </button>
-            <button onClick={() => setAddOpen(true)} className="primary-btn add-btn"><span className="add-icon" aria-hidden="true">+</span>Добавить</button>
-          </div>
-        </header>
-
-        {loadingProducts && (
-          <div className="progress">
-            <div className="progress-bar" />
-          </div>
-        )}
-
-        {productsError && <p className="error">{productsError}</p>}
-
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th className="checkbox-cell">
-                  <input type="checkbox" checked={allProductsSelected} onChange={toggleSelectAll} />
-                </th>
-                <th className="name-col" onClick={() => toggleSort('title')}>Наименование {renderSortIcon('title')}</th>
-                <th className="vendor-col">Вендор</th>
-                <th className="sku-col">Артикул</th>
-                <th className="rating-col" onClick={() => toggleSort('rating')}>Оценка {renderSortIcon('rating')}</th>
-                <th className="price-col" onClick={() => toggleSort('price')}>Цена, ₽ {renderSortIcon('price')}</th>
-                <th className="row-action-cell" />
-                <th className="row-action-cell" />
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedProducts.map((product) => {
-                const selected = selectedProductIds.includes(product.id);
-                return (
-                  <tr key={product.id} className={selected ? 'selected-row' : ''}>
-                    <td className="checkbox-cell">
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleProductSelection(product.id)}
-                      />
-                    </td>
-                    <td className="name-col">
-                      <div className="name-cell">
-                        <span className="product-preview" />
-                        <div>
-                          <p className="product-title">{product.title}</p>
-                          <p className="product-category">{getCategory(product.title)}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="vendor vendor-col">{product.brand ?? '—'}</td>
-                    <td className="sku-col">{product.sku ?? '—'}</td>
-                    <td className={`rating-col ${product.rating < 3.5 ? 'rating-low' : ''}`}>{product.rating.toFixed(1)}/5</td>
-                    <td className="price-cell price-col">{formatPrice(product.price)}</td>
-                    <td className="row-action-cell"><button className="pill-btn" type="button">＋</button></td>
-                    <td className="row-action-cell"><button className="menu-btn" type="button">⋯</button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <footer className="products-footer">
-          <p>Показано {startIndex}-{endIndex} из {sortedProducts.length}</p>
-          <div className="pagination">
-            <button type="button" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>‹</button>
-            {visiblePageNumbers.map((page) => (
-              <button
-                type="button"
-                key={page}
-                className={page === currentPage ? 'active' : ''}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              ›
-            </button>
-          </div>
-        </footer>
-      </section>
+    <>
+      <ProductsPage
+        search={search}
+        loadingProducts={loadingProducts}
+        productsError={productsError}
+        paginatedProducts={paginatedProducts}
+        selectedProductIds={selectedProductIds}
+        allProductsSelected={allProductsSelected}
+        sort={sort}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        visiblePageNumbers={visiblePageNumbers}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalItems={sortedProducts.length}
+        onSearchChange={setSearch}
+        onRefresh={loadProducts}
+        onOpenAdd={() => setAddOpen(true)}
+        onToggleSort={toggleSort}
+        onToggleSelectAll={toggleSelectAll}
+        onToggleProductSelection={toggleProductSelection}
+        onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+        onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+        onSetPage={setCurrentPage}
+      />
 
       {isAddOpen && (
-        <div className="modal-overlay" onClick={() => setAddOpen(false)}>
-          <form className="card modal" onClick={(event) => event.stopPropagation()} onSubmit={addProduct}>
-            <h2>Добавить товар</h2>
-            <label>
-              Наименование
-              <input
-                value={newProduct.title}
-                onChange={(event) => setNewProduct((prev) => ({ ...prev, title: event.target.value }))}
-              />
-            </label>
-            <label>
-              Цена
-              <input
-                type="number"
-                value={newProduct.price}
-                onChange={(event) => setNewProduct((prev) => ({ ...prev, price: event.target.value }))}
-              />
-            </label>
-            <label>
-              Вендор
-              <input
-                value={newProduct.brand}
-                onChange={(event) => setNewProduct((prev) => ({ ...prev, brand: event.target.value }))}
-              />
-            </label>
-            <label>
-              Артикул
-              <input
-                value={newProduct.sku}
-                onChange={(event) => setNewProduct((prev) => ({ ...prev, sku: event.target.value }))}
-              />
-            </label>
-            <label>
-              Рейтинг
-              <input
-                type="number"
-                min="0"
-                max="5"
-                step="0.1"
-                value={newProduct.rating}
-                onChange={(event) => setNewProduct((prev) => ({ ...prev, rating: event.target.value }))}
-              />
-            </label>
-            <div className="actions">
-              <button type="button" className="text-btn" onClick={() => setAddOpen(false)}>Отмена</button>
-              <button type="submit" className="primary-btn">Сохранить</button>
-            </div>
-          </form>
-        </div>
+        <AddProductModal
+          product={newProduct}
+          onClose={() => setAddOpen(false)}
+          onSubmit={addProduct}
+          onChange={(field, value) => setNewProduct((prev) => ({ ...prev, [field]: value }))}
+        />
       )}
 
       {toast && <div className="toast">{toast}</div>}
-    </main>
+    </>
   );
 }
