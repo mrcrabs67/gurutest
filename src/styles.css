@@ -188,16 +188,17 @@ label {
 .input-icon-clear::after {
   content: '';
   position: absolute;
-  left: 7px;
+  left: 50%;
   top: 0;
   width: 2px;
   height: 16px;
   background: #c4c6cd;
   border-radius: 1px;
+  transform-origin: center;
 }
 
-.input-icon-clear::before { transform: rotate(45deg); }
-.input-icon-clear::after { transform: rotate(-45deg); }
+.input-icon-clear::before { transform: translateX(-50%) rotate(45deg); }
+.input-icon-clear::after { transform: translateX(-50%) rotate(-45deg); }
 
 .input-icon-eye,
 .input-icon-eye-open {
@@ -240,6 +241,11 @@ input {
 
 input::placeholder {
   color: #cbccd3;
+}
+
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
 }
 
 .checkbox {
