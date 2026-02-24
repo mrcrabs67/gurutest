@@ -215,27 +215,37 @@ export default function App() {
     return (
       <main className="page auth-page">
         <section className="auth-card">
-          <div className="auth-logo">◔</div>
-          <h1>Добро пожаловать!</h1>
-          <p className="hint auth-subtitle">Пожалуйста, авторизируйтесь</p>
+          <div className="auth-logo"><span className="auth-logo-mark" aria-hidden="true" /></div>
+          <div className="auth-title-wrap">
+            <h1>Добро пожаловать!</h1>
+            <p className="hint auth-subtitle">Пожалуйста, авторизируйтесь</p>
+          </div>
 
           <form onSubmit={handleLogin} className="form-grid">
             <label>
               Логин
-              <input
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder="Введите username"
-              />
+              <span className="field-input">
+                <span className="input-icon input-icon-user" aria-hidden="true" />
+                <input
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder="Введите username"
+                />
+                <span className="input-icon input-icon-clear" aria-hidden="true" />
+              </span>
             </label>
             <label>
               Пароль
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Введите пароль"
-              />
+              <span className="field-input">
+                <span className="input-icon input-icon-lock" aria-hidden="true" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Введите пароль"
+                />
+                <span className="input-icon input-icon-eye" aria-hidden="true" />
+              </span>
             </label>
             <label className="checkbox remember-check">
               <input
