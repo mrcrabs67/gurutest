@@ -48,6 +48,7 @@ export default function App() {
   const [loadingAuth, setLoadingAuth] = useState(false);
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -63,16 +64,22 @@ export default function App() {
   });
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!session) return;
-
+  const loadProducts = () => {
     setLoadingProducts(true);
     setProductsError(null);
 
     fetchProducts(search)
-      .then((data) => setProducts(data))
+      .then((data) => {
+        setProducts(data);
+        setSelectedProductIds([]);
+      })
       .catch((error: Error) => setProductsError(error.message))
       .finally(() => setLoadingProducts(false));
+  };
+
+  useEffect(() => {
+    if (!session) return;
+    loadProducts();
   }, [session, search]);
 
   useEffect(() => {
@@ -117,6 +124,7 @@ export default function App() {
     localStorage.removeItem(LOCAL_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     setSession(null);
+    setSelectedProductIds([]);
   };
 
   const toggleSort = (key: SortState['key']) => {
@@ -144,9 +152,22 @@ export default function App() {
     };
 
     setProducts((prev) => [productToAdd, ...prev]);
+    setSelectedProductIds((prev) => [productToAdd.id, ...prev]);
     setAddOpen(false);
     setNewProduct({ title: '', price: '', brand: '', sku: '', rating: '3' });
     setToast('Товар успешно добавлен');
+  };
+
+  const toggleProductSelection = (id: number) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const allProductsSelected = products.length > 0 && selectedProductIds.length === products.length;
+
+  const toggleSelectAll = () => {
+    setSelectedProductIds(allProductsSelected ? [] : products.map((product) => product.id));
   };
 
   if (!session) {
@@ -200,6 +221,9 @@ export default function App() {
             <p className="hint">Пользователь: {session.username}</p>
           </div>
           <div className="actions">
+            <button className="secondary" onClick={loadProducts} disabled={loadingProducts}>
+              Обновить
+            </button>
             <button onClick={() => setAddOpen(true)}>Добавить</button>
             <button className="secondary" onClick={handleLogout}>Выйти</button>
           </div>
@@ -213,6 +237,8 @@ export default function App() {
           />
         </div>
 
+        <p className="hint">Выбрано товаров: {selectedProductIds.length}</p>
+
         {loadingProducts && (
           <div className="progress">
             <div className="progress-bar" />
@@ -225,6 +251,9 @@ export default function App() {
           <table>
             <thead>
               <tr>
+                <th className="checkbox-cell">
+                  <input type="checkbox" checked={allProductsSelected} onChange={toggleSelectAll} />
+                </th>
                 <th onClick={() => toggleSort('title')}>Наименование</th>
                 <th onClick={() => toggleSort('price')}>Цена</th>
                 <th>Вендор</th>
@@ -235,6 +264,13 @@ export default function App() {
             <tbody>
               {sortedProducts.map((product) => (
                 <tr key={product.id}>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      checked={selectedProductIds.includes(product.id)}
+                      onChange={() => toggleProductSelection(product.id)}
+                    />
+                  </td>
                   <td>{product.title}</td>
                   <td>{product.price}$</td>
                   <td>{product.brand ?? '—'}</td>

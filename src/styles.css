@@ -129,8 +129,19 @@ th {
 }
 
 th:nth-child(3),
-th:nth-child(4) {
+th:nth-child(4),
+th:nth-child(5) {
   cursor: default;
+}
+
+.checkbox-cell {
+  width: 44px;
+  text-align: center;
+}
+
+.checkbox-cell input {
+  width: 16px;
+  height: 16px;
 }
 
 .rating-low {
