@@ -256,7 +256,7 @@ export default function App() {
             <button className="icon-btn" onClick={loadProducts} disabled={loadingProducts} aria-label="Обновить">
               ↻
             </button>
-            <button onClick={() => setAddOpen(true)} className="primary-btn add-btn">⊕ Добавить</button>
+            <button onClick={() => setAddOpen(true)} className="primary-btn add-btn"><span className="add-icon" aria-hidden="true">+</span>Добавить</button>
             <button className="text-btn" onClick={handleLogout}>Выйти</button>
           </div>
         </header>
@@ -310,8 +310,8 @@ export default function App() {
                     <td>{product.sku ?? '—'}</td>
                     <td className={product.rating < 3.5 ? 'rating-low' : ''}>{product.rating.toFixed(1)}/5</td>
                     <td className="price-cell">{formatPrice(product.price)}</td>
-                    <td><button className="pill-btn" type="button">＋</button></td>
-                    <td><button className="menu-btn" type="button">⠇</button></td>
+                    <td className="row-action-cell"><button className="pill-btn" type="button">＋</button></td>
+                    <td className="row-action-cell"><button className="menu-btn" type="button">⋯</button></td>
                   </tr>
                 );
               })}
